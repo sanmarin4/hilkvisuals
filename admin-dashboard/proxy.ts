@@ -41,9 +41,8 @@ export async function proxy(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
+          request.cookies.delete({
             name,
-            value: '',
             ...options,
           })
           response = NextResponse.next({
@@ -51,9 +50,8 @@ export async function proxy(request: NextRequest) {
               headers: request.headers,
             },
           })
-          response.cookies.set({
+          response.cookies.delete({
             name,
-            value: '',
             ...options,
           })
         },
@@ -61,21 +59,29 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // Protected routes: everything except /login and public assets
-  const isLoginPage = request.nextUrl.pathname === '/login'
-  const isPublicAsset = request.nextUrl.pathname.startsWith('/_next') || 
-                        request.nextUrl.pathname.includes('.')
+    // Protected routes: everything except /login and public assets
+    const isLoginPage = request.nextUrl.pathname === '/login'
+    const isPublicAsset = request.nextUrl.pathname.startsWith('/_next') || 
+                          request.nextUrl.pathname.includes('.')
 
-  if (!user && !isLoginPage && !isPublicAsset) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+    if (!user && !isLoginPage && !isPublicAsset) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
 
-  if (user && isLoginPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (user && isLoginPage) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  } catch (error) {
+    console.error('Middleware Auth Error:', error)
+    // If auth fails completely (e.g. invalid keys), don't crash, just redirect to login if not already there
+    if (request.nextUrl.pathname !== '/login') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   return response

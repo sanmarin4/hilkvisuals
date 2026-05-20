@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { 
   AreaChart, 
   Area, 
@@ -33,6 +34,16 @@ const barData = [
 const COLORS = ['#6366f1', '#8b5cf6', '#3b82f6', '#10b981']
 
 export default function DashboardCharts() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 h-[400px]" />
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
       {/* Revenue Over Time */}

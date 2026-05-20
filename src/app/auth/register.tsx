@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View, Pressable, Alert, ActivityIndicator } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+'use client';
+
 import { Ionicons } from '@expo/vector-icons';
+import { Link, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthLogo } from '@/components/auth-logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { AuthLogo } from '@/components/auth-logo';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function RegisterScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signUp, session, isLoading } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRegister = async () => {
     if (!fullName || !email || !password) {
@@ -28,19 +30,23 @@ export default function RegisterScreen() {
       return;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
-      // Simulate a registration delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await signIn(email, fullName);
+      await signUp(email, password, fullName);
       router.replace('/(tabs)');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to register');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to register');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading && session) {
+      router.replace('/(tabs)');
+    }
+  }, [session, isLoading, router]);
 
   return (
     <ThemedView style={styles.container}>
@@ -114,11 +120,11 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity 
-              style={[styles.button, { backgroundColor: theme.primary }, isLoading && { opacity: 0.7 }]}
+              style={[styles.button, { backgroundColor: theme.primary }, isSubmitting && { opacity: 0.7 }]}
               onPress={handleRegister}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
                 <ThemedText style={styles.buttonText}>SIGN UP</ThemedText>

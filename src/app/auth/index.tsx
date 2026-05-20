@@ -1,17 +1,27 @@
-import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+'use client';
+
 import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthLogo } from '@/components/auth-logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { AuthLogo } from '@/components/auth-logo';
 import { Spacing } from '@/constants/theme';
+import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function GetStartedScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { session, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && session) {
+      router.replace('/(tabs)');
+    }
+  }, [isLoading, session, router]);
 
   return (
     <ThemedView style={styles.container}>

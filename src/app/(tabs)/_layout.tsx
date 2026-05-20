@@ -1,10 +1,30 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+'use client';
+
+import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function TabLayout() {
   const theme = useTheme();
+  const { session, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !session) {
+      router.replace('/auth');
+    }
+  }, [isLoading, session, router]);
+
+  if (isLoading || !session) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.text} />
+      </View>
+    );
+  }
 
   return (
     <Tabs
@@ -13,12 +33,12 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.text,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#1E1E1E', // Dark background for tabs as seen in Figma
+          backgroundColor: '#1E1E1E',
           borderTopWidth: 0,
           height: 70,
           paddingBottom: 10,
         },
-        tabBarShowLabel: false, // Figma doesn't show labels in the tab bar
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
@@ -56,3 +76,11 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
